@@ -1,0 +1,6 @@
+---
+exclude_paths:
+  - .venv/
+
+skip_list:
+  - command-instead-of-module

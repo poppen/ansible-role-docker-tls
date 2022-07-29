@@ -1,0 +1,90 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Update apt cache.
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      when: ansible_os_family == 'Debian'
+
+    - name: Wait for systemd to complete initialization.
+      ansible.builtin.command: systemctl is-system-running
+      register: systemctl_status
+      until: >
+        'running' in systemctl_status.stdout or
+        'degraded' in systemctl_status.stdout
+      retries: 30
+      delay: 5
+      when: ansible_service_mgr == 'systemd'
+      changed_when: false
+      failed_when: systemctl_status.rc > 1
+
+    - name: Create CA private key
+      community.crypto.openssl_privatekey_pipe:
+      register: ca_key
+      changed_when: false
+
+    - name: Create CSR for CA certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_content: "{{ ca_key.privatekey }}"
+        common_name: Ansible CA
+        use_common_name_for_san: false
+        basic_constraints:
+          - 'CA:TRUE'
+        basic_constraints_critical: true
+        key_usage:
+          - keyCertSign
+        key_usage_critical: true
+      register: ca_csr
+      changed_when: false
+
+    - name: Create self-signed CA certificate from CSR
+      community.crypto.x509_certificate_pipe:
+        csr_content: "{{ ca_csr.csr }}"
+        privatekey_content: "{{ ca_key.privatekey }}"
+        provider: selfsigned
+      register: ca_crt
+      changed_when: false
+
+    - name: Create Host private key
+      community.crypto.openssl_privatekey_pipe:
+      register: server_key
+      changed_when: false
+
+    - name: Create CSR for Host certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_content: "{{ server_key.privatekey }}"
+        common_name: example.com
+        subject_alt_name:
+          - "DNS:docker.example.com"
+      register: server_csr
+      changed_when: false
+
+    - name: Sign certificate with CA
+      community.crypto.x509_certificate_pipe:
+        csr_content: "{{ server_csr.csr }}"
+        provider: ownca
+        ownca_content: "{{ ca_crt.certificate }}"
+        ownca_privatekey_content: "{{ ca_key.privatekey }}"
+      register: server_crt
+      changed_when: false
+
+    - name: Update docker_tls_keys
+      ansible.builtin.set_fact:
+        docker_tls_keys:
+          "{{ {'ca_cert': ca_crt.certificate,
+              'server_key': server_key.privatekey,
+              'server_cert': server_crt.certificate} }}"
+      changed_when: false
+
+    - name: Print docker_tls_keys
+      ansible.builtin.debug:
+        msg: "{{ docker_tls_keys }}"
+
+  tasks:
+    - name: "Include poppen.docker_tls"
+      ansible.builtin.include_role:
+        name: "poppen.docker_tls"

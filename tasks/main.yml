@@ -1,0 +1,48 @@
+---
+- name: Create docker.service.d directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/docker.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when: docker_tls_keys.keys() | length > 0
+
+- name: Copy docker.service drop-in
+  ansible.builtin.template:
+    src: docker.service.j2
+    dest: /etc/systemd/system/docker.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart docker.service
+  when: docker_tls_keys.keys() | length > 0
+
+- name: Ensure TLS key basepath exists
+  ansible.builtin.file:
+    path: "{{ docker_tls_basepath }}"
+    state: directory
+    mode: 0755
+  when: docker_tls_keys.keys() | length > 0
+
+- name: Copy TLS keys to docker host
+  ansible.builtin.copy:
+    content: '{{ item.content }}'
+    dest: '{{ item.dest }}'
+    owner: root
+    group: root
+    mode: '{{ item.mode }}'
+  no_log: true
+  when: item.content | length > 0
+  with_items:
+    - {content: "{{ docker_tls_keys.ca_cert | default('') }}", dest: "{{ docker_tls_basepath }}/ca.crt", mode: '0644'}
+    - {content: "{{ docker_tls_keys.server_cert | default('') }}", dest: "{{ docker_tls_basepath }}/server.crt", mode: '0644'}
+    - {content: "{{ docker_tls_keys.server_key | default('') }}", dest: "{{ docker_tls_basepath }}/server.key", mode: '0600'}
+
+- name: Update daemon.json
+  ansible.builtin.copy:
+    content: "{{ docker_daemon_options | combine(docker_daemon_tls_options) | to_nice_json }}"
+    dest: /etc/docker/daemon.json
+    mode: 0644
+  notify: restart docker.service
+  when: docker_tls_keys.keys() | length > 0
