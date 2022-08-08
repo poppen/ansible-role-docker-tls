@@ -38,6 +38,8 @@
     - {content: "{{ docker_tls_keys.ca_cert | default('') }}", dest: "{{ docker_tls_basepath }}/ca.crt", mode: '0644'}
     - {content: "{{ docker_tls_keys.server_cert | default('') }}", dest: "{{ docker_tls_basepath }}/server.crt", mode: '0644'}
     - {content: "{{ docker_tls_keys.server_key | default('') }}", dest: "{{ docker_tls_basepath }}/server.key", mode: '0600'}
+  tags:
+    - molecule-idempotence-notest
 
 - name: Update daemon.json
   ansible.builtin.copy:
