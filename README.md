@@ -1,38 +1,59 @@
-Role Name
-=========
+# Ansible Role: docker_tls
 
-A brief description of the role goes here.
+An ansible Role that enables TLS support, along with geerlingguy.docker role.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ubuntu 18.04 or above
+- Debian 10 or above
 
-Role Variables
---------------
+## Role Variable
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Available variables are listed below, along with default values (see `defaults/main.yml`):
 
-Dependencies
-------------
+```yml
+docker_tls_basepath: '/etc/docker'
+docker_tls_keys:
+  ca_cert: ""
+  server_cert: ""
+  server_key: ""
+```
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+`docker_tls_basepath` is a directory that manages where the private key and certification files locate. `docker_tls_keys` is a dictionary that contains three keys, `ca_cert` (CA certification), `server_cert` (the Docker daemon certification), and `server_key` (the Docker daemon private key). These keys' values must be in PEM format.
 
-Example Playbook
-----------------
+```yml
+docker_daemon_tls_options:
+  tlsverify: true
+  tlscacert: "{{ docker_tls_basepath }}/ca.crt"
+  tlscert: "{{ docker_tls_basepath }}/server.crt"
+  tlskey: "{{ docker_tls_basepath }}/server.key"
+  hosts: ["tcp://0.0.0.0:2376", "fd://"]
+```
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+`docker_daemon_tls_options` contains the options of dockerd relevant TLS or so. It is merged with `docker_daemon_options` of `geerlingguy.docker` and converted into `/etc/docker/daemon.json`. Note that this role installs `docker.service` drop-in file for systemd to avoid the conflict of dockerd options, `hosts` between systemd and `/etc/docker/daemon.json`. You need to configure the `hosts` option via `docker_daemon_options` or this dictionary (I recommend this dictionary to evade problems while running ansible-playbook).
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Dependencies
 
-License
--------
+- geerlingguy.docker
 
-BSD
+## Example Playbook
 
-Author Information
-------------------
+```yml
+- hosts: all
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+  roles:
+    - geerlingguy.docker
+    - poppen.docker_tls
+```
+
+## License
+
+MIT
+
+## Future Plan
+
+- Merge with geerlingguy.docker (Need to support the RedHat family. PRs are always welcome).
+
+## Author Information
+
+Shinsuke MATSUI
