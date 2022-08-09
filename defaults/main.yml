@@ -5,7 +5,6 @@ docker_tls_keys:
   server_cert: ""
   server_key: ""
 docker_daemon_tls_options:
-  containerd: "/run/containerd/containerd.sock"
   tlsverify: true
   tlscacert: "{{ docker_tls_basepath }}/ca.crt"
   tlscert: "{{ docker_tls_basepath }}/server.crt"
