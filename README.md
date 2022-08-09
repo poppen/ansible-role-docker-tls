@@ -1,5 +1,7 @@
 # Ansible Role: docker_tls
 
+[![CI](https://github.com/poppen/ansible-role-docker-tls/actions/workflows/ci.yml/badge.svg)](https://github.com/poppen/ansible-role-docker-tls/actions/workflows/ci.yml)
+
 An ansible Role that enables TLS support, along with geerlingguy.docker role.
 
 ## Requirements
