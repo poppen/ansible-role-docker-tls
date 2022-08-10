@@ -50,7 +50,7 @@ docker_daemon_tls_options:
 
 ## License
 
-MIT
+BSD-3-Clause
 
 ## Future Plan
 
