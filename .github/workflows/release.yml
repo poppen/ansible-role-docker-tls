@@ -7,9 +7,9 @@
 
 name: Release
 'on':
-  push:
-    tags:
-      - '*'
+  release:
+    types:
+      - published
 
 defaults:
   run:
