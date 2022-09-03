@@ -2,6 +2,8 @@
 name: CI
 on:
   push:
+    branches:
+      - "main"
   pull_request:
 
 defaults:
@@ -9,6 +11,20 @@ defaults:
     working-directory: 'poppen.docker_tls'
 
 jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: 'poppen.docker_tls'
+      - name: Download actionlint
+        id: get_actionlint
+        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        shell: bash
+      - name: Check workflow files
+        run: ${{ steps.get_actionlint.outputs.executable }} -color
+        shell: bash
+
   molecule:
     name: Molecule
     runs-on: ubuntu-latest
