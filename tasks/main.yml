@@ -15,7 +15,7 @@
     owner: root
     group: root
     mode: 0644
-  notify: restart docker.service
+  notify: Restart docker.service
   when: docker_tls_keys.keys() | length > 0
 
 - name: Ensure TLS key basepath exists
@@ -46,5 +46,5 @@
     content: "{{ docker_daemon_options | combine(docker_daemon_tls_options) | to_nice_json }}"
     dest: /etc/docker/daemon.json
     mode: 0644
-  notify: restart docker.service
+  notify: Restart docker.service
   when: docker_tls_keys.keys() | length > 0
