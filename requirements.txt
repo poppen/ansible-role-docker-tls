@@ -1,7 +1,7 @@
-ansible==6.4.0
+ansible==6.5.0
 ansible-compat==2.2.1
-ansible-core==2.13.4
-ansible-lint==6.8.0
+ansible-core==2.13.5
+ansible-lint==6.8.2
 arrow==1.2.3
 attrs==22.1.0
 binaryornot==0.4.4
@@ -24,7 +24,7 @@ Jinja2==3.1.2
 jinja2-time==0.2.0
 jsonschema==4.16.0
 MarkupSafe==2.1.1
-molecule==4.0.1
+molecule==4.0.2
 molecule-docker==2.1.0
 packaging==21.3
 pathspec==0.10.1
